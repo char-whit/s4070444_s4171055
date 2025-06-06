@@ -13,15 +13,15 @@ def get_page_html(form_data):
 
 <div class="header">
         <h1>
-            <img src="tmp-image.png" class="top-image" alt="logo" width="75" height="75">
+            <img src="images/global-warming.png" class="top-image" alt="logo" width="75" height="75">
             My Website about climate change
         </h1>
 </div>
 
     <div class="topnav">
         <a href="/">Home</a>
-        <a href="/task-a-1">Task A</a>
-        <a href="/task-b-1">Task B</a>
+        <a href="/mission">B task 1</a>
+        <a href="/metrics">B task 2</a>
         <a href="#" style="float:right">Help</a>
     </div>
 
