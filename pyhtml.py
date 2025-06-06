@@ -1,6 +1,6 @@
 #Students don't need to understand the implementation details here, let alone modify this code.
 #File version: 2025.03.28
-#Author: Gayan Wijesinghe, for questions, contact via Ms Teams.
+#Author: Gayan Wijesinghe, for questions, contact via
 
 import sqlite3
 import os
