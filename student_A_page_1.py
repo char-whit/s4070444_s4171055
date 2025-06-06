@@ -23,6 +23,7 @@ def get_page_html(form_data):
     <div class="topnav">
         <a href="/">Home</a>
         <a href="/weather-stations">A task 2</a>
+        <a href="/ap2">A task 2.2</a>
         <a href="/weather-stations-similar">A task 3</a>
         <a href="/mission">B task 1</a>
         <a href="/metrics">B task 2</a>
