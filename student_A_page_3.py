@@ -1,313 +1,198 @@
-import pyhtml
+import sqlite3
 
-def get_page_html(form_data):
-    print("About to return Similarity Page...")
-    db_path = "database/climate.db"
+class WeatherStationAnalyzer:
+    def __init__(self, db_path):
+        self.db_path = db_path
 
-    # Dropdown options
-    stations = pyhtml.get_results_from_query(db_path, "SELECT DISTINCT name, site_id FROM weather_station ORDER BY name;")
-    metrics = ['MaxTemp', 'MinTemp', 'Rainfall']
+    def execute_query(self, query, params=()):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            return cursor.fetchall()
 
-    page_html = """
+    def get_stations(self):
+        return self.execute_query("SELECT DISTINCT site_id, name FROM weather_station ORDER BY name;")
+
+    def get_station_name(self, station_id):
+        result = self.execute_query("SELECT name FROM weather_station WHERE site_id = ?;", (station_id,))
+        return result[0][0] if result else "Unknown Station"
+
+    def get_average_by_period(self, period, metric):
+        start_year, end_year = map(int, period.split("-"))
+        value_expr = "(MaxTemp + MinTemp)/2" if metric == "AverageTemp" else metric
+        query = f"""
+            SELECT Location, ROUND(AVG(CAST({value_expr} AS FLOAT)), 2)
+            FROM weather_data
+            WHERE CAST(SUBSTR(DMY, 7, 4) AS INTEGER) BETWEEN {start_year} AND {end_year}
+            AND {value_expr} IS NOT NULL
+            GROUP BY Location;
+        """
+        result = self.execute_query(query)
+        return dict(result)
+
+    def get_station_data(self, station_id, period, metric):
+        start_year, end_year = map(int, period.split("-"))
+        value_expr = "(MaxTemp + MinTemp)/2" if metric == "AverageTemp" else metric
+        query = f"""
+            SELECT COUNT({value_expr}), ROUND(AVG(CAST({value_expr} AS FLOAT)), 2)
+            FROM weather_data
+            WHERE Location = ?
+            AND CAST(SUBSTR(DMY, 7, 4) AS INTEGER) BETWEEN ? AND ?
+            AND {value_expr} IS NOT NULL;
+        """
+        result = self.execute_query(query, (station_id, start_year, end_year))
+        count, avg = result[0] if result else (0, None)
+        return avg if count >= 50 else None  # Allow some missing data, but not too little
+
+
+def generate_html_page(form_data, analyzer):
+    stations = analyzer.get_stations()
+    station_options = "".join([f'<option value="{sid}">{name}</option>' for sid, name in stations])
+    metric_options = {
+        "MaxTemp": "Max Temperature",
+        "MinTemp": "Min Temperature",
+        "Rainfall": "Rainfall",
+        "AverageTemp": "Average Temperature"
+    }
+    periods = ['2000-2004', '2005-2009', '2010-2014', '2015-2019']
+    period_options = "".join([f'<option value="{p}">{p}</option>' for p in periods])
+    result_html = ""
+
+    if form_data:
+        try:
+            station_id = form_data.get("station", [""])[0]
+            metric = form_data.get("metric", ["MaxTemp"])[0]
+            period1 = form_data.get("period1", ["2005-2009"])[0]
+            period2 = form_data.get("period2", ["2010-2014"])[0]
+            num_results = int(form_data.get("num_results", ["3"])[0])
+
+            ref_name = analyzer.get_station_name(station_id)
+            ref_avg1 = analyzer.get_station_data(station_id, period1, metric)
+            ref_avg2 = analyzer.get_station_data(station_id, period2, metric)
+
+            avg1 = analyzer.get_average_by_period(period1, metric)
+            avg2 = analyzer.get_average_by_period(period2, metric)
+
+            if ref_avg1 is not None:
+                avg1[station_id] = ref_avg1
+            if ref_avg2 is not None:
+                avg2[station_id] = ref_avg2
+
+            if ref_avg1 and ref_avg2 and ref_avg1 != 0:
+                ref_change = round(((ref_avg2 - ref_avg1) / ref_avg1) * 100, 2)
+            else:
+                ref_change = 0
+
+            percent_changes = {}
+            for site in set(avg1) & set(avg2):
+                if avg1[site] != 0:
+                    change = ((avg2[site] - avg1[site]) / avg1[site]) * 100
+                    percent_changes[site] = round(change, 2)
+
+            percent_changes[station_id] = ref_change
+
+            similarity_list = [
+                (site, change, round(change - ref_change, 2), avg1.get(site), avg2.get(site))
+                for site, change in percent_changes.items()
+            ]
+            similarity_list.sort(key=lambda x: abs(x[2]))
+
+            unit = "mm" if metric == "Rainfall" else "degrees C"
+            metric_label = metric_options[metric]
+
+            reference_row = f"""
+                <tr class="selected-station">
+                    <td><span style="color: red;"><em>{ref_name}</em></span></td>
+                    <td><span style="color: red;"><em>{f"{ref_avg1:.2f} {unit}" if ref_avg1 is not None else "N/A"}</em></span></td>
+                    <td><span style="color: red;"><em>{f"{ref_avg2:.2f} {unit}" if ref_avg2 is not None else "N/A"}</em></span></td>
+                    <td><span style="color: red;"><em>{f"{ref_change:.2f}%" if ref_change is not None else "N/A"}</em></span></td>
+                    <td><span style="color: red;"><em>+0.00% (selected)</em></span></td>
+                </tr>
+            """
+
+            other_rows = ""
+            count = 0
+            for site, change, diff, a1, a2 in similarity_list:
+                if site == station_id:
+                    continue
+                if count >= num_results:
+                    break
+                count += 1
+                name = analyzer.get_station_name(site)
+                other_rows += f"""
+                    <tr>
+                        <td>{name}</td>
+                        <td>{f"{a1:.2f} {unit}" if a1 is not None else "N/A"}</td>
+                        <td>{f"{a2:.2f} {unit}" if a2 is not None else "N/A"}</td>
+                        <td>{f"{change:.2f}%" if change is not None else "N/A"}</td>
+                        <td>{f"{diff:+.2f}%" if diff is not None else "N/A"}</td>
+                    </tr>
+                """
+
+            table_rows = reference_row + other_rows
+
+            result_html = f"""
+                <h2>Top {num_results} Similar Stations to {ref_name}</h2>
+                <p>Comparing {metric_label} changes from {period1} to {period2}</p>
+                <p><small><em>If results for {ref_name} display N/A there is insufficient data collected. Results only shown for stations with at least 50 valid records per period.</em></small></p>
+                <table border="1" cellpadding="5" style="background:white;">
+                    <tr>
+                        <th>Station</th>
+                        <th>{period1}</th>
+                        <th>{period2}</th>
+                        <th>% Change</th>
+                        <th>% Diff from {ref_name}</th>
+                    </tr>
+                    {table_rows}
+                </table>
+            """
+        except Exception as e:
+            result_html = f"<p class='error'>Error: {str(e)}</p>"
+
+    return f"""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Find Similar Weather Stations</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f0f0f0;
-                margin: 0;
-                padding: 0;
-            }
-            .header {
-                background-color: #fff;
-                padding: 20px;
-                text-align: center;
-            }
-            .topnav {
-                background-color: #333;
-                overflow: hidden;
-                margin-bottom: 20px;
-            }
-            .topnav a {
-                float: left;
-                color: white;
-                text-align: center;
-                padding: 14px 16px;
-                text-decoration: none;
-                font-size: 17px;
-            }
-            .topnav a:hover {
-                background-color: #ddd;
-                color: black;
-            }
-            .content {
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: white;
-                border-radius: 5px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            }
-            form {
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-            }
-            label {
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-            select, input {
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-            input[type="submit"] {
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 15px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                width: auto;
-            }
-            .styled-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 25px 0;
-            }
-            .styled-table thead tr {
-                background-color: #009879;
-                color: white;
-                text-align: left;
-            }
-            .styled-table th,
-            .styled-table td {
-                padding: 12px 15px;
-            }
-            .styled-table tbody tr {
-                border-bottom: 1px solid #dddddd;
-            }
-            .styled-table tbody tr:nth-of-type(even) {
-                background-color: #f3f3f3;
-            }
-        </style>
+        <title>Station Similarity</title>
+        <link rel="stylesheet" href="A_page3.css">
     </head>
     <body>
-        <div class="header">
-            <h1>Find Similar Weather Stations</h1>
-        </div>
-
         <div class="topnav">
-            <a href="/">Home</a>
-            <a href="/mission">Mission Statement</a>
-            <a href="/weather-stations">Weather Stations</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/mission">Our mission</a>
+                <a href="/weather-stations">Climate change based on weather station</a>
+                <a href="/metrics">Climate change based on climate metric</a>
+                <a href="/weather-stations-similar">Similar station metrics</a>
+                <a href="/metrics-similar">Similar climate metrics</a>
+            </div>
         </div>
 
-        <div class="content">
-            <form method="get" action="/weather-stations-similar">
+        <h1>Compare Weather Station Climate Trends</h1>
+        <h4>Select a weather station of your choice and analyse its change over a specified period of time.</h4>
+
+        <form method="get">
+            <label>Reference Station:</label>
+            <select name="station">{station_options}</select><br><br>
+            <label>Climate Metric:</label>
+            <select name="metric">
+                {''.join([f'<option value="{k}">{v}</option>' for k, v in metric_options.items()])}
+            </select><br><br>
+            <label>Time Period 1:</label>
+            <select name="period1">{period_options}</select><br><br>
+            <label>Time Period 2:</label>
+            <select name="period2">{period_options}</select><br><br>
+            <label>Number of Similar Stations:</label>
+            <input type="number" name="num_results" value="3" min="1" max="20"><br><br>
+            <input type="submit" value="Find Similar Stations">
+        </form>
+        {result_html}
+    </body>
+    </html>
     """
 
-    # Reference Station dropdown
-    page_html += '<label for="ref_station">Reference Station:</label>'
-    page_html += '<select name="ref_station" id="ref_station">'
-    for name, site_id in stations:
-        selected = "selected" if form_data.get("ref_station", [""])[0] == str(site_id) else ""
-        page_html += f'<option value="{site_id}" {selected}>{name}</option>'
-    page_html += '</select><br>'
 
-    # Year inputs
-    year_inputs = [
-        ("start1", "Start Year (Period 1)"),
-        ("end1", "End Year (Period 1)"),
-        ("start2", "Start Year (Period 2)"),
-        ("end2", "End Year (Period 2)")
-    ]
-    for key, label in year_inputs:
-        val = form_data.get(key, [""])[0] or ("2005" if "start1" in key else 
-                                             "2009" if "end1" in key else
-                                             "2010" if "start2" in key else "2015")
-        page_html += f'<label for="{key}">{label}:</label>'
-        page_html += f'<input type="number" name="{key}" id="{key}" value="{val}"><br>'
-
-    # Metric selection
-    selected_metric = form_data.get("metric", ["MaxTemp"])[0]
-    page_html += '<label for="metric">Climate Metric:</label>'
-    page_html += '<select name="metric" id="metric">'
-    for metric in metrics:
-        selected = "selected" if selected_metric == metric else ""
-        page_html += f'<option value="{metric}" {selected}>{metric}</option>'
-    page_html += '</select><br>'
-
-    # Top K input
-    k_val = form_data.get("top_k", ["3"])[0]
-    page_html += '<label for="top_k">How many similar stations?</label>'
-    page_html += f'<input type="number" name="top_k" id="top_k" value="{k_val}" min="1"><br>'
-
-    page_html += '<input type="submit" value="Find Similar Stations">'
-    page_html += '</form>'
-
-    # Results table
-    if "ref_station" in form_data:
-        results = get_similar_stations(form_data, db_path)
-        metric_col = selected_metric
-
-        # Reference row
-        ref_station = int(form_data["ref_station"][0])
-        ref_details = pyhtml.get_results_from_query(db_path, f"""
-            WITH period_avgs AS (
-                SELECT
-                    ws.name,
-                    ROUND(AVG(CASE 
-                        WHEN CAST(strftime('%Y', date(substr(wd.DMY, 7, 4) || '-' || 
-                                                      substr(wd.DMY, 4, 2) || '-' || 
-                                                      substr(wd.DMY, 1, 2))) AS INTEGER) 
-                        BETWEEN {form_data['start1'][0]} AND {form_data['end1'][0]} 
-                        THEN wd.{metric_col} END), 1) AS avg1,
-                    ROUND(AVG(CASE 
-                        WHEN CAST(strftime('%Y', date(substr(wd.DMY, 7, 4) || '-' || 
-                                                      substr(wd.DMY, 4, 2) || '-' || 
-                                                      substr(wd.DMY, 1, 2))) AS INTEGER) 
-                        BETWEEN {form_data['start2'][0]} AND {form_data['end2'][0]} 
-                        THEN wd.{metric_col} END), 1) AS avg2
-                FROM weather_data wd
-                JOIN weather_station ws ON wd.Location = ws.site_id
-                WHERE ws.site_id = {ref_station}
-                GROUP BY ws.name
-            )
-            SELECT
-                name,
-                avg1,
-                avg2,
-                ROUND(((avg2 - avg1) / avg1) * 100.0, 2) AS change
-            FROM period_avgs;
-        """)
-
-        page_html += "<h2>Similar Weather Stations:</h2>"
-        page_html += """
-        <table class='styled-table'>
-            <thead>
-                <tr>
-                    <th>Station</th>
-                    <th>Period 1 Avg</th>
-                    <th>Period 2 Avg</th>
-                    <th>% Change</th>
-                    <th>Difference from Ref</th>
-                </tr>
-            </thead>
-            <tbody>
-        """
-
-        if ref_details:
-            ref_name, avg1, avg2, change = ref_details[0]
-            page_html += f"""
-                <tr>
-                    <td>{ref_name} (selected)</td>
-                    <td>{avg1:.1f}</td>
-                    <td>{avg2:.1f}</td>
-                    <td>{'+' if change >= 0 else ''}{change:.2f}%</td>
-                    <td>0.00%</td>
-                </tr>
-            """
-
-        for row in results:
-            change_sign = '+' if row['change'] >= 0 else ''
-            diff_sign = '+' if row['diff'] >= 0 else ''
-            page_html += f"""
-                <tr>
-                    <td>{row['name']}</td>
-                    <td>{row['avg1']:.1f}</td>
-                    <td>{row['avg2']:.1f}</td>
-                    <td>{change_sign}{row['change']:.2f}%</td>
-                    <td>{diff_sign}{row['diff']:.2f}%</td>
-                </tr>
-            """
-
-        page_html += "</tbody></table>"
-    else:
-        page_html += "<p>No results found. Please try different parameters.</p>"
-
-    page_html += "</div></body></html>"
-    return page_html
-
-
-def get_similar_stations(form_data, db_path):
-    try:
-        ref_station = int(form_data["ref_station"][0])
-        start1 = int(form_data["start1"][0])
-        end1 = int(form_data["end1"][0])
-        start2 = int(form_data["start2"][0])
-        end2 = int(form_data["end2"][0])
-        top_k = int(form_data["top_k"][0])
-        metric_col = form_data.get("metric", ["MaxTemp"])[0]
-
-        sql = f"""
-            WITH period_avgs AS (
-                SELECT
-                    ws.name,
-                    ws.site_id,
-                    ROUND(AVG(CASE 
-                        WHEN CAST(strftime('%Y', date(substr(wd.DMY, 7, 4) || '-' || 
-                                                      substr(wd.DMY, 4, 2) || '-' || 
-                                                      substr(wd.DMY, 1, 2))) AS INTEGER) 
-                        BETWEEN {start1} AND {end1} 
-                        THEN wd.{metric_col} END), 1) AS avg1,
-                    ROUND(AVG(CASE 
-                        WHEN CAST(strftime('%Y', date(substr(wd.DMY, 7, 4) || '-' || 
-                                                      substr(wd.DMY, 4, 2) || '-' || 
-                                                      substr(wd.DMY, 1, 2))) AS INTEGER) 
-                        BETWEEN {start2} AND {end2} 
-                        THEN wd.{metric_col} END), 1) AS avg2
-                FROM weather_data wd
-                JOIN weather_station ws ON wd.Location = ws.site_id
-                WHERE wd.{metric_col} IS NOT NULL
-                GROUP BY ws.site_id
-            ),
-            changes AS (
-                SELECT
-                    name,
-                    site_id,
-                    avg1,
-                    avg2,
-                    ROUND(((avg2 - avg1) / avg1) * 100.0, 2) AS change
-                FROM period_avgs
-                WHERE avg1 IS NOT NULL AND avg2 IS NOT NULL AND avg1 != 0
-            ),
-            ref_change AS (
-                SELECT change FROM changes WHERE site_id = {ref_station}
-            )
-            SELECT
-                c.name,
-                c.site_id,
-                c.avg1,
-                c.avg2,
-                c.change,
-                ROUND(c.change - r.change, 2) AS diff
-            FROM changes c, ref_change r
-            WHERE c.site_id != {ref_station}
-            ORDER BY ABS(diff)
-            LIMIT {top_k};
-        """
-
-        results = pyhtml.get_results_from_query(db_path, sql)
-        return [{
-            "name": row[0],
-            "avg1": row[2],
-            "avg2": row[3],
-            "change": row[4],
-            "diff": row[5]
-        } for row in results]
-
-    except Exception as e:
-        print(f"Error in get_similar_stations: {str(e)}")
-        return []
-
-
-
-
-
-
+def get_page_html(form_data):
+    db_path = "database/climate.db"
+    analyzer = WeatherStationAnalyzer(db_path)
+    return generate_html_page(form_data, analyzer)

@@ -7,32 +7,24 @@ def get_page_html(form_data):
     <html>
     <head>
         <link rel="stylesheet" href="A_page2.css">
-
     </head>
     <body>
-        <div class="header">
-            <h1>
-                <img src="images/global-warming.png" class="top-image" alt="logo" width="75" height="75">
-                My Website about climate change
-            </h1>
-        </div>
-
         <div class="topnav">
-            <a href="/">Home</a>
-            <a href="/mission">Mission Statement</a>
-           
-                    <a href="/weather-stations">Climate Information</a>
-                    <a href="/weather-stations-similar">Similar stations</a>
-                </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/mission">Our mission</a>
+                <a href="/weather-stations">Climate change based on weather station</a>
+                <a href="/metrics">Climate change based on climate metric</a>
+                <a href="/weather-stations-similar">Similar station metrics</a>
+                <a href="/metrics-similar">Similar climate metrics</a>
             </div>
-            <a href="#" style="float:right">Help</a>
         </div>
 
         <div class="content">
             <div class="row">
                 <div class="column side">
-                    <h2>Column</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
+                    <h2>Info</h2>
+                    <p>Select filters to view weather station data and summaries.</p>
                 </div>
                 <div class="column middle">
                     <h2>Weather Stations</h2>
@@ -50,26 +42,33 @@ def get_page_html(form_data):
                 <option value="">Select State</option>
     """
 
-    # Add state options
     for row in results:
         selected = "selected" if "state" in form_data and form_data["state"][0] == str(row[0]) else ""
         page_html += f'<option value="{row[0]}" {selected}>{row[1]}</option>'
 
-    # Add latitude inputs
     lat_start = form_data.get("lat_start", [""])[0]
     lat_end = form_data.get("lat_end", [""])[0]
+    summary_metric = form_data.get("summary_metric", ["MaxTemp"])[0]
 
     page_html += f"""
         </select><br><br>
         <label for="lat_start">Latitude start:</label>
-        <input type="number" step="0.01" id="lat_start" name="lat_start" value="{lat_start}"><br><br>
+        <input type="number" step="1" id="lat_start" name="lat_start" value="{lat_start}"><br><br>
         <label for="lat_end">Latitude end:</label>
-        <input type="number" step="0.01" id="lat_end" name="lat_end" value="{lat_end}"><br><br>
+        <input type="number" step="1" id="lat_end" name="lat_end" value="{lat_end}"><br><br>
+
+        <label for="summary_metric">Summary Metric:</label>
+        <select id="summary_metric" name="summary_metric">
     """
 
-    # Add ordering options
+    metrics = ["MaxTemp", "MinTemp", "Precipitation", "Evaporation", "Sunshine"]
+    for metric in metrics:
+        selected = "selected" if summary_metric == metric else ""
+        page_html += f'<option value="{metric}" {selected}>{metric}</option>'
+
     page_html += """
-        <label for="var_order">Order:</label>
+        </select><br><br>
+        <label for="var_order">Order by:</label>
         <select id="var_order" name="var_order">
             <option value="">...</option>
             <option value="station">station name</option>
@@ -88,13 +87,11 @@ def get_page_html(form_data):
     <div>
     """
 
-    # Display results if state is selected
     if "state" in form_data:
         state_name = getStateName(form_data["state"][0])
         page_html += f"<h2>{state_name}</h2>"
         page_html += displayStateTable(form_data)
 
-    # Close all divs and add footer
     page_html += """
                 </div>
             </div>
@@ -110,7 +107,7 @@ def get_page_html(form_data):
     return page_html
 
 def getStateName(id):
-    sql_query = f"SELECT name FROM state WHERE state.id = {id}"
+    sql_query = f"SELECT name FROM state WHERE id = {id}"
     results = pyhtml.get_results_from_query("database/climate.db", sql_query)
     return results[0][0] if results else ""
 
@@ -118,8 +115,12 @@ def displayStateTable(form_data):
     if not form_data:
         return ""
 
-    # Query for Table 1 - Weather Station Details
-    sql_query_stations = """
+    summary_metric = form_data.get("summary_metric", ["MaxTemp"])[0]
+    allowed_metrics = ["MaxTemp", "MinTemp", "Precipitation", "Evaporation", "Sunshine"]
+    if summary_metric not in allowed_metrics:
+        summary_metric = "MaxTemp"
+
+    sql_query_stations = f"""
         SELECT 
             weather_station.site_id as site,
             weather_station.name,
@@ -127,9 +128,9 @@ def displayStateTable(form_data):
             weather_station.latitude
         FROM weather_station
         JOIN region ON weather_station.region_id = region.id
-        WHERE weather_station.state_id = """ + form_data["state"][0]
+        WHERE weather_station.state_id = {form_data["state"][0]}
+    """
 
-    # Add latitude filter if provided
     if "lat_start" in form_data and "lat_end" in form_data:
         try:
             lat_start = float(form_data["lat_start"][0])
@@ -138,7 +139,6 @@ def displayStateTable(form_data):
         except ValueError:
             pass
 
-    # Add ordering if provided
     if "var_order" in form_data and "order" in form_data:
         sort_fields = {
             "station": "weather_station.name",
@@ -149,20 +149,17 @@ def displayStateTable(form_data):
             direction = form_data["order"][0] if form_data["order"][0] in ["ASC", "DESC"] else "ASC"
             sql_query_stations += f" ORDER BY {sort_fields[form_data['var_order'][0]]} {direction}"
 
-    # Query for Table 2 - Regional Summary
-
-    # Query for Table 2 - Regional Summary
-    sql_query_summary = """
+    sql_query_summary = f"""
         SELECT 
             region.name as region,
             COUNT(DISTINCT weather_station.site_id) as station_count,
-            AVG(weather_data.MaxTemp) as avg_max_temp
+            AVG(weather_data.{summary_metric}) as avg_value
         FROM region
         JOIN weather_station ON region.id = weather_station.region_id
         LEFT JOIN weather_data ON weather_station.site_id = weather_data.location
-        WHERE weather_station.state_id = """ + form_data["state"][0]
+        WHERE weather_station.state_id = {form_data["state"][0]}
+    """
 
-    # Add latitude filter to summary if provided
     if "lat_start" in form_data and "lat_end" in form_data:
         try:
             lat_start = float(form_data["lat_start"][0])
@@ -173,11 +170,9 @@ def displayStateTable(form_data):
 
     sql_query_summary += " GROUP BY region.name"
 
-    # Get results for both tables
     station_results = pyhtml.get_results_from_query("database/climate.db", sql_query_stations)
     summary_results = pyhtml.get_results_from_query("database/climate.db", sql_query_summary)
 
-    # Build HTML for Table 1
     table1_html = """
         <h3>Weather Station Details</h3>
         <table class="styled-table">
@@ -204,27 +199,26 @@ def displayStateTable(form_data):
 
     table1_html += "</tbody></table>"
 
-    # Build HTML for Table 2
-    table2_html = """
+    table2_html = f"""
         <h3>Regional Summary</h3>
         <table class="styled-table">
             <thead>
                 <tr>
                     <th>Region</th>
                     <th>Number Weather Stations</th>
-                    <th>Average Max Temperature</th>
+                    <th>Average {summary_metric}</th>
                 </tr>
             </thead>
             <tbody>
     """
 
     for row in summary_results:
-        avg_temp = 'N/A' if row[2] is None else f"{float(row[2]):.1f}"
+        avg_value = 'N/A' if row[2] is None else f"{float(row[2]):.1f}"
         table2_html += f"""
             <tr>
                 <td>{row[0]}</td>
                 <td>{row[1]}</td>
-                <td>{avg_temp}</td>
+                <td>{avg_value}</td>
             </tr>
         """
 
@@ -232,54 +226,3 @@ def displayStateTable(form_data):
 
     return table1_html + table2_html
 
-def build_query_weather_station(form_data):
-    base_query = """
-        SELECT
-            weather_station.name AS station_name,
-            region.name AS region_name,
-            weather_station.latitude,
-            weather_station.longitude
-        FROM weather_station
-        JOIN region ON weather_station.region_id = region.id
-        JOIN state ON weather_station.state_id = state.id
-    """
-    
-    conditions = []
-    
-    # Add state condition
-    if "state" in form_data:
-        try:
-            state_id = int(form_data["state"][0])
-            conditions.append(f"state.id = {state_id}")
-        except ValueError:
-            pass
-
-    # Add latitude range condition
-    if "lat_start" in form_data and "lat_end" in form_data:
-        try:
-            lat_start = float(form_data["lat_start"][0])
-            lat_end = float(form_data["lat_end"][0])
-            conditions.append(f"weather_station.latitude BETWEEN {lat_start} AND {lat_end}")
-        except ValueError:
-            pass
-
-    # Add ordering
-    order_by = ""
-    if "var_order" in form_data:
-        sort_fields = {
-            "latitude": "weather_station.latitude",
-            "station": "weather_station.name",
-            "region": "region.name"
-        }
-        user_choice = form_data["var_order"][0]
-        if user_choice in sort_fields:
-            direction = form_data.get("order", ["ASC"])[0].upper()
-            if direction not in ["ASC", "DESC"]:
-                direction = "ASC"
-            order_by = f"ORDER BY {sort_fields[user_choice]} {direction}"
-
-    # Combine query parts
-    where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-    final_query = f"{base_query} {where_clause} {order_by};"
-    
-    return final_query

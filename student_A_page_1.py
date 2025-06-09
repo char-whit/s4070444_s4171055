@@ -9,7 +9,7 @@ def get_page_html(form_data):
     <head>
         <meta charset="UTF-8">
         <title>Climate Change in Australia</title>
-        <link rel="stylesheet" href="style_landing_page.css">
+        <link rel="stylesheet" href="A_landing_page.css">
         
             
     </head>
@@ -19,14 +19,13 @@ def get_page_html(form_data):
         <div class="topnav">
             <div class="nav-links">
                 <a href="/">Home</a>
-                <a href="/weather-stations">A task 2</a>
-                <a href="/ap2">A task 2.2</a>
-                <a href="/weather-stations-similar">A task 3</a>
-                <a href="/mission">B task 1</a>
-                <a href="/metrics">B task 2</a>
-                <a href="/metrics-similar">B task 3</a>
+                <a href="/mission">Our mission</a>
+                <a href="/weather-stations">Climate change based on weather station</a>
+                <a href="/metrics">Climate change based on climate metric</a>
+                <a href="/weather-stations-similar">Similar station metrics</a>
+                <a href="/metrics-similar">Similar climate metrics</a>
             </div>
-            <a href="#">Help</a>
+            
         </div>
 
         <div class="hero">
@@ -37,7 +36,8 @@ def get_page_html(form_data):
 
         <div class="intro">
             <h2>Why This Matters</h2>
-            <p>Our planet is changing. This site helps you understand how by exploring real-world weather station data across Australia.</p>
+            <h4>Our planet is changing. Austalia's climate is changing.</h4>
+            <p>This site helps you understand how by exploring data from 141 weather stations nationwide which a pleathora of weather data being recorded daily from 1970 to 2020.</p>
         </div>
 
         <div class="topics">
