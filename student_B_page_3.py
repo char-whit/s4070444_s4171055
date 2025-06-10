@@ -2,28 +2,21 @@ def get_page_html(form_data):
     print("About to return page home page...")
     page_html="""
     <!DOCTYPE html>
-<html>
-
-<head>
-    <!-- Include the external css file -->
-    <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-
-<div class="header">
-        <h1>
-            <img src="images/global-warming.png" class="top-image" alt="logo" width="75" height="75">
-            My Website about climate change
-        </h1>
-</div>
-
-    <div class="topnav">
-        <a href="/">Home</a>
-        <a href="/mission">B task 1</a>
-        <a href="/metrics">B task 2</a>
-        <a href="#" style="float:right">Help</a>
-    </div>
+    <html>
+    <head>
+        <link rel="stylesheet" href="A_page2.css">
+    </head>
+    <body>
+        <div class="topnav">
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/mission">Our mission</a>
+                <a href="/weather-stations">Climate change based on weather station</a>
+                <a href="/metrics">Climate change based on climate metric</a>
+                <a href="/weather-stations-similar">Similar station metrics</a>
+                <a href="/metrics-similar">Similar climate metrics</a>
+            </div>
+        </div>
 
     
 

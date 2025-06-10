@@ -1,42 +1,37 @@
+
+
 def get_page_html(form_data):
     print("About to return page home page...")
-    page_html="""
+    page_html ="""
     <!DOCTYPE html>
-<html>
-
-<head>
-    <!-- Include the external css file -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="B_task_1.css">
-</head>
-
-<body>
-
-<div class="header">
-        <h1>
-            <img src="images/global-warming.png" class="top-image" alt="logo" width="75" height="75">
-            My Website about climate change
-        </h1>
-</div>
-
-    <div class="topnav">
-        <a href="/">Home</a>
-        <a href="/metrics">B task 2</a>
-        <a href="/metrics-similar">B task 3</a>
-        <a href="#" style="float:right">Help</a>
-    </div>
-
-    
-
-    <div class="content">
-
-    <div class="row">
-        <div class="column side">
-            <h2>Mission Statement</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sit amet pretium urna. Vivamus venenatis velit nec neque ultricies, eget elementum magna tristique. Quisque vehicula, risus eget aliquam placerat, purus leo tincidunt eros, eget luctus quam orci in velit. Praesent scelerisque tortor sed accumsan convallis.</p>
+    <html>
+    <head>
+        <link rel="stylesheet" href="B_page1.css">
+    </head>
+    <body>
+        <div class="topnav">
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/mission">Our Mission</a>
+                <a href="/weather-stations">Climate Change based on Weather Station</a>
+                <a href="/metrics">Climate Change based on Climate Metric</a>
+                <a href="/weather-stations-similar">Similar Station Metrics</a>
+                <a href="/metrics-similar">Similar Climate Metrics</a>
+            </div>
         </div>
-    
-        <div class="column middle">
+
+        <div class="mission-background">
+            <div class="mission-box">
+                <h2>Mission Statement</h2>
+                <p>
+                    Our website aims to address the 'Anthropomorphic Climate Change' social challenge by serving as an accessible and informative platform that presents Australian climate data in a meaningful and unbiased manner. It aims to empower users to understand the long-term trends and effects of human-induced climate change within the Australian context.
+                <br><br>
+                    We approach this challenge from a social and educational perspective. Our goal is to promote climate literacy by presenting climate data, such as temperature, rainfall, humidity changes and more, through interactive and selective parameters that display the desired climate data in table form. These tools are designed to support our audience based on our personas (seen below).
+                </p>
+            </div>
+        </div>
+
+        <div class="persona-section">
             <div class="persona-row">
                 <div class="card">
                     <img src="images/image-person.jpg" alt="Persona 1" class="persona-img">
@@ -68,21 +63,17 @@ def get_page_html(form_data):
             </div>
         </div>
     
-        <div class="column side">
-            <h2>Column</h2>
+        <div class="info-box">
+            <h2>How our website can be used?</h2>
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sit amet pretium urna. Vivamus venenatis velit nec neque ultricies, eget elementum magna tristique. Quisque vehicula, risus eget aliquam placerat, purus leo tincidunt eros, eget luctus quam orci in velit. Praesent scelerisque tortor sed accumsan convallis.</p>
         </div>
-
-    </div>    
-    
-    </div>
 
     <div class="footer">
         <p>Python Programming Studio Assignment - WORKING APPLICATION</p>
     </div>
 
-</body>
-</html>    
+    </body>
+    </html>    
 
     """
     return page_html

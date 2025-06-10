@@ -19,11 +19,11 @@ def get_page_html(form_data):
         <div class="topnav">
             <div class="nav-links">
                 <a href="/">Home</a>
-                <a href="/mission">Our mission</a>
-                <a href="/weather-stations">Climate change based on weather station</a>
-                <a href="/metrics">Climate change based on climate metric</a>
-                <a href="/weather-stations-similar">Similar station metrics</a>
-                <a href="/metrics-similar">Similar climate metrics</a>
+                <a href="/mission">Our Mission</a>
+                <a href="/weather-stations">Climate Change based on Weather Station</a>
+                <a href="/metrics">Climate Change based on Climate Metric</a>
+                <a href="/weather-stations-similar">Similar Station Metrics</a>
+                <a href="/metrics-similar">Similar Climate Metrics</a>
             </div>
             
         </div>
