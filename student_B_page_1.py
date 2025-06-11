@@ -1,8 +1,43 @@
-
+import sqlite3
 
 def get_page_html(form_data):
-    print("About to return page home page...")
-    page_html ="""
+    # Connect to the climate.db SQLite database
+    conn = sqlite3.connect('database/climate.db')
+    cursor = conn.cursor()
+
+
+    # Fetch persona records
+    cursor.execute("SELECT name, age, gender, ethnicity, body FROM personas")
+    personas = cursor.fetchall()
+
+    persona_cards_html = ""
+    for i, persona in enumerate(personas):
+        name, age, gender, ethnicity, body = persona
+        image_filename = name.lower() + ".jpg"  # Assuming image filenames are lowercase first names
+
+        persona_cards_html += f"""
+        <div class="card">
+            <img src="images/{image_filename}" alt="{name}" class="persona-img">
+            <h2>{name} ({gender}, {age})</h2>
+            <p><strong>Ethnicity:</strong> {ethnicity}</p>
+            <p>{body}</p>
+        </div>
+        """
+
+    # Fetch team member records
+    cursor.execute("SELECT student_name, student_num FROM team_members")
+    team_members = cursor.fetchall()
+
+    team_members_html = "<ul>"
+    for student_name, student_num in team_members:
+        team_members_html += f"<li>{student_name}  ({student_num})</li>"
+    team_members_html += "</ul>"
+
+    # Close the database connection
+    conn.close()
+
+    # HTML for the page   
+    page_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -33,47 +68,26 @@ def get_page_html(form_data):
 
         <div class="persona-section">
             <div class="persona-row">
-                <div class="card">
-                    <img src="images/image-person.jpg" alt="Persona 1" class="persona-img">
-                    <h2>Persona 1</h2>
-                    <p>London is the capital city of England.</p>
-                    <p>London has over 9 million inhabitants.</p>
-                </div>
-
-                <div class="card">
-                    <img src="images/image-person.jpg" alt="Persona 1" class="persona-img">
-                    <h2>Persona 2</h2>
-                    <p>Oslo is the capital city of Norway.</p>
-                    <p>Oslo has over 700,000 inhabitants.</p>
-                </div>
-
-                <div class="card">
-                    <img src="images/image-person.jpg" alt="Persona 1" class="persona-img">
-                    <h2>Persona 3</h2>
-                    <p>Rome is the capital city of Italy.</p>
-                    <p>Rome has over 4 million inhabitants.</p>
-                </div>   
-
-                <div class="card">
-                    <img src="images/image-person.jpg" alt="Persona 1" class="persona-img">
-                    <h2>Persona 4</h2>
-                    <p>Paris is the capital city of France.</p>
-                    <p>Paris has over 2 million inhabitants.</p>
-                </div>     
+                {persona_cards_html}
             </div>
         </div>
-    
+
         <div class="info-box">
             <h2>How our website can be used?</h2>
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sit amet pretium urna. Vivamus venenatis velit nec neque ultricies, eget elementum magna tristique. Quisque vehicula, risus eget aliquam placerat, purus leo tincidunt eros, eget luctus quam orci in velit. Praesent scelerisque tortor sed accumsan convallis.</p>
         </div>
 
-    <div class="footer">
-        <p>Python Programming Studio Assignment - WORKING APPLICATION</p>
-    </div>
+        <div class="info-box">
+            <h2>Team Members</h2>
+            {team_members_html}
+        </div>
 
+        <div class="footer">
+            <p>Python Programming Studio Assignment - WORKING APPLICATION</p>
+            <p>Image Found: https://unsplash.com/photos/a-view-of-a-mountain-range-from-a-distance-aiEByysNppw</p>
+        </div>
     </body>
-    </html>    
-
+    </html>
     """
+
     return page_html

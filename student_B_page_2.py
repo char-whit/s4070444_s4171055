@@ -1,3 +1,5 @@
+import pyhtml
+
 def get_page_html(form_data):
     print("About to return page home page...")
     page_html="""
@@ -18,18 +20,20 @@ def get_page_html(form_data):
             </div>
         </div>
 
-    
+        
 
-    <div class="content">
-        <p>Subtask A-1</p>
-    </div>
+        <h1>Climate change based on climate metric</h1>
+        <p>is supposed to go here...</p>
 
+
+
+        
     <div class="footer">
         <p>COSC3106 - Programming Class 5</p>
     </div>
 
-</body>
-</html>    
+    </body>
+    </html>    
 
     """
     return page_html
