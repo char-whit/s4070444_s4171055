@@ -74,7 +74,11 @@ def get_page_html(form_data):
 
         <div class="info-box">
             <h2>How our website can be used?</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sit amet pretium urna. Vivamus venenatis velit nec neque ultricies, eget elementum magna tristique. Quisque vehicula, risus eget aliquam placerat, purus leo tincidunt eros, eget luctus quam orci in velit. Praesent scelerisque tortor sed accumsan convallis.</p>
+            <p>
+                Our personas will use the website as a reliable, user-friendly platform to access, interpret, and apply Australian climate data for their personal, professional, and community needs and lives. The platform enables users to quickly find credible climate data and trends. Such information can help plan around climate variability, manage risk, and adapt to weather impacts in agriculture and business sectors.
+            <br><br>
+                The website is designed to cater to various levels of digital proficiency, offering summaries of weather data from over the years, presented clearly and respectfully for a wide audience.
+            </p>
         </div>
 
         <div class="info-box">
