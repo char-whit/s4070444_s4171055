@@ -31,7 +31,16 @@ def get_page_html(form_data):
         <div class="hero">
             <h1>Investigating Climate Change in Australia</h1>
             <p>Track key environmental metrics and discover changes across regions</p>
-            <a href="/weather-stations">Explore Weather Data</a>
+            <div class="dropdown-hero">
+    
+    <div class="dropdown-content-hero">
+        <a href="/weather-stations">Weather Station Data</a>
+        <a href="/metrics">Climate Metric Data</a>
+        <a href="/weather-stations-similar">Similar Station Metrics</a>
+        <a href="/metrics-similar">Similar Climate Metrics</a>
+    </div>
+</div>
+
         </div>
 
         <div class="intro">
@@ -118,6 +127,17 @@ def get_page_html(form_data):
 
             showSlide(currentSlide);
         </script>
+<footer style="background-color: #2c3e50; color: white; padding: 40px 20px 20px; text-align: center; font-size: 16px; margin-top: 80px; border-top: 3px solid #4CAF50;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 15px;">
+        <a href="/" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Home</a>
+        <a href="/mission" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Our Mission</a>
+        <a href="/weather-stations" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Weather Station Data</a>
+        <a href="/metrics" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Climate Metric Data</a>
+        <a href="/weather-stations-similar" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Similar Station Metrics</a>
+        <a href="/metrics-similar" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Similar Climate Metrics</a>
+    </div>
+    <p style="font-size: 14px; color: #ccc; margin-top: 10px;">© 2025 Climate Change in Australia | Data from the Australian Bureau of Meteorology</p>
+</footer>
 
     </body>
     </html>
