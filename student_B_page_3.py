@@ -11,7 +11,7 @@ class ClimateMetricAnalyzer:
             return cursor.fetchall()
 
     def get_all_metrics(self):
-        return ["Precipitation", "MaxTemp", "MinTemp", "Evaporation", "Sunshine", "Cloud"]
+        return ["Precipitation", "MaxTemp", "MinTemp", "Evaporation", "Sunshine"]
 
     def get_total_for_period(self, metric, start_year, end_year):
         query = f"""
@@ -22,6 +22,7 @@ class ClimateMetricAnalyzer:
         """
         result = self.execute_query(query, (start_year, end_year))
         return result[0][0] if result and result[0][0] is not None else 0.0
+
 
 def generate_similarity_html(form_data, analyzer):
     metric_options = analyzer.get_all_metrics()
@@ -105,37 +106,58 @@ def generate_similarity_html(form_data, analyzer):
     metric_select_html = "".join([f'<option value="{m}">{m}</option>' for m in metric_options])
 
     return f"""
+    <!DOCTYPE html>
     <html>
-    <head><title>Climate Metric Similarity</title></head>
+    <head>
+        <title>Climate Metric Similarity</title>
+        <link rel="stylesheet" href="B_page3.css">
+    </head>
     <body>
-        <h1>Explore Similar Climate Metrics</h1>
-        <form method="get">
-            <label>Reference Metric:</label>
-            <select name="reference_metric">{metric_select_html}</select><br><br>
+        <div class="topnav">
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/mission">Our Mission</a>
+                <a href="/weather-stations">Climate Change based on Weather Station</a>
+                <a href="/metrics">Climate Change based on Climate Metric</a>
+                <a href="/weather-stations-similar">Similar Station Metrics</a>
+                <a href="/metrics-similar">Similar Climate Metrics</a>
+            </div>
+        </div>
 
-            <label>Period 1 Start Year:</label>
-            <input type="number" name="period1_start" value="2005">
-            <label>End Year:</label>
-            <input type="number" name="period1_end" value="2009"><br><br>
+        <div class="container">
+            <h1>Explore Similar Climate Metrics</h1>
+            <form method="get">
+                <label>Reference Metric:</label>
+                <select name="reference_metric">{metric_select_html}</select><br><br>
 
-            <label>Period 2 Start Year:</label>
-            <input type="number" name="period2_start" value="2010">
-            <label>End Year:</label>
-            <input type="number" name="period2_end" value="2015"><br><br>
+                <label>Period 1 Start Year:</label>
+                <input type="number" name="period1_start" value="2005">
+                <label>End Year:</label>
+                <input type="number" name="period1_end" value="2009"><br><br>
 
-            <label>Number of Similar Metrics:</label>
-            <input type="number" name="num_results" value="3"><br><br>
+                <label>Period 2 Start Year:</label>
+                <input type="number" name="period2_start" value="2010">
+                <label>End Year:</label>
+                <input type="number" name="period2_end" value="2015"><br><br>
 
-            <input type="submit" value="Compare">
-        </form>
-        <hr>
-        {result_html}
+                <label>Number of Similar Metrics:</label>
+                <input type="number" name="num_results" value="3"><br><br>
+
+                <input type="submit" value="Compare">
+            </form>
+            <hr>
+            {result_html}
+        </div>
+
+        <div class="footer">
+            <p>Python Programming Studio Assignment - WORKING APPLICATION</p>
+        </div>
     </body>
     </html>
     """
 
-# Entry function for pyhtml handler
+
+# Entry function
 def get_page_html(form_data):
     analyzer = ClimateMetricAnalyzer("database/climate.db")
     return generate_similarity_html(form_data, analyzer)
-
