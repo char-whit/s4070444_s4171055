@@ -76,39 +76,33 @@ def generate_html_page(form_data, analyzer):
                 avg1 = analyzer.get_average_by_period(period1, metric)
                 avg2 = analyzer.get_average_by_period(period2, metric)
 
-                invalid_rows = ""
-                all_sites = set(site for site, _ in stations)
-                missing_sites = all_sites - (set(avg1.keys()) & set(avg2.keys()))
-                for site in missing_sites:
+                valid_sites = sorted(set(avg1.keys()) & set(avg2.keys()))
+                valid_rows = ""
+                for site in valid_sites:
                     name = analyzer.get_station_name(site)
-                    reason = []
-                    if site not in avg1:
-                        reason.append("Missing in Period 1")
-                    if site not in avg2:
-                        reason.append("Missing in Period 2")
-                    reason_str = ", ".join(reason)
-                    invalid_rows += f"""
+                    valid_rows += f"""
                         <tr>
                             <td>{name}</td>
-                            <td>{reason_str}</td>
+                            <td>Enough data</td>
+                            <td>Enough data</td>
                         </tr>
                     """
 
-                invalid_table = f"""
-                    <h3>Stations with Insufficient Data</h3>
-                    <p><small>These stations had fewer than 50 valid records in one or both time periods.</small></p>
+                valid_table = f"""
+                    <h3>Stations with Valid Data</h3>
+                    <p><small>These stations have at least 50 valid records in both selected periods.</small></p>
                     <table border="1" cellpadding="5" style="background:#fff;">
-                        <tr><th>Station</th><th>Issue</th></tr>
-                        {invalid_rows}
+                        <tr><th>Station</th><th>Avg {metric} ({p1_start}-{p1_end})</th><th>Avg {metric} ({p2_start}-{p2_end})</th></tr>
+                        {valid_rows}
                     </table>
-                """ if invalid_rows else ""
+                """ if valid_rows else ""
 
                 result_html = f"""
                     <h2>Insufficient Data</h2>
                     <p>The selected reference station <strong>{ref_name}</strong> does not have enough data for the chosen time periods.</p>
                     <p>Please try a different station or select different years.</p>
                     <p><small>Note: A minimum of 50 valid records per period is required.</small></p>
-                    {invalid_table}
+                    {valid_table}
                 """
                 return wrap_page(result_html, station_options, metric_options)
 
