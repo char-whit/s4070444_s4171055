@@ -24,7 +24,7 @@ def get_page_html(form_data):
             <div class="row">
                 <div class="column side">
                     <h2>Info</h2>
-                    <p>Select filters to view weather station data and summaries.</p>
+                    <p>Use the filters below to explore weather station data across Australia. You can select a state, narrow results by latitude range, and choose a climate summary metric such as MaxTemp. The table will display matching weather stations and a regional summary based on your selections.</p>
                 </div>
                 <div class="column middle">
                     <h2>Weather Stations</h2>
