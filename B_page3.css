@@ -32,3 +32,12 @@ body {
             .topnav a:hover {
                 background-color: #4CAF50;
             }
+
+/* Footer */
+.footer {
+  padding: 20px;
+  text-align: center;
+  background: #2c3e50;
+  color: #fff;
+  margin-top: 20px;
+}

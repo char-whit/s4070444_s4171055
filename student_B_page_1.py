@@ -88,7 +88,9 @@ def get_page_html(form_data):
 
         <div class="footer">
             <p>Python Programming Studio Assignment - WORKING APPLICATION</p>
-            <p>Image Found: https://unsplash.com/photos/a-view-of-a-mountain-range-from-a-distance-aiEByysNppw</p>
+            <p>Background Image Found: 
+                <a href="https://unsplash.com/photos/a-view-of-a-mountain-range-from-a-distance-aiEByysNppw" target="_blank">
+                Unsplash</a>
         </div>
     </body>
     </html>

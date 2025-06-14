@@ -1,52 +1,5 @@
 import sqlite3
 
-class WeatherStationAnalyzer:
-    def __init__(self, db_path):
-        self.db_path = db_path
-
-    def execute_query(self, query, params=()):
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            return cursor.fetchall()
-
-    def get_metrics(self):
-        return {
-            "Rainfall": "Rainfall (mm)",
-            "MaxTemp": "Maximum Temperature (°C)",
-            "MinTemp": "Minimum Temperature (°C)",
-            "AverageTemp": "Average Temperature (°C)"
-        }
-
-    def get_daily_metric_data(self, metric, station_start, station_end, date_start, date_end):
-        value_expr = "(MaxTemp + MinTemp)/2" if metric == "AverageTemp" else metric
-        query = f"""
-            SELECT wd.Location, wd.DMY, CAST({value_expr} AS FLOAT)
-            FROM weather_data wd
-            JOIN weather_station ws ON wd.Location = ws.site_id
-            WHERE wd.Location BETWEEN ? AND ?
-              AND DATE(substr(DMY, 7, 4) || '-' || substr(DMY, 4, 2) || '-' || substr(DMY, 1, 2)) 
-                  BETWEEN ? AND ?
-              AND {value_expr} IS NOT NULL
-            ORDER BY wd.Location, DMY;
-        """
-        return self.execute_query(query, (station_start, station_end, date_start, date_end))
-
-    def get_state_summary(self, metric, month, year):
-        value_expr = "(MaxTemp + MinTemp)/2" if metric == "AverageTemp" else metric
-        query = f"""
-            SELECT s.name, ROUND(SUM(CAST({value_expr} AS FLOAT)), 2)
-            FROM weather_data wd
-            JOIN weather_station ws ON wd.Location = ws.site_id
-            JOIN state s ON ws.state_id = s.id
-            WHERE substr(DMY, 4, 2) = ? AND substr(DMY, 7, 4) = ?
-              AND {value_expr} IS NOT NULL
-            GROUP BY s.name
-            ORDER BY s.name;
-        """
-        return self.execute_query(query, (f"{int(month):02d}", str(year)))
-
-
 def generate_html_page(form_data, analyzer):
     metrics = analyzer.get_metrics()
     result_html = ""
@@ -84,7 +37,6 @@ def generate_html_page(form_data, analyzer):
                 </table>
             """
 
-            # Summary table
             summary = analyzer.get_state_summary(metric, summary_month, summary_year)
             summary_rows = "".join(
                 f"<tr><td>{state}</td><td>{total:.2f} {unit}</td></tr>"
@@ -106,9 +58,11 @@ def generate_html_page(form_data, analyzer):
 
     return f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
         <title>Climate Metric Viewer</title>
+        <link rel="stylesheet" href="B_page2.css">
         <style>
             body {{
                 font-family: Arial, sans-serif;
@@ -146,9 +100,43 @@ def generate_html_page(form_data, analyzer):
             th {{
                 background-color: #e0e0e0;
             }}
+            .topnav {{
+                background-color: #333;
+                overflow: hidden;
+                margin-bottom: 30px;
+            }}
+            .nav-links a {{
+                float: left;
+                display: block;
+                color: #f2f2f2;
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+            }}
+            .nav-links a:hover {{
+                background-color: #ddd;
+                color: black;
+            }}
+            .footer {{
+                margin-top: 40px;
+                font-size: 0.9em;
+                text-align: center;
+                color: #555;
+            }}
         </style>
     </head>
     <body>
+        <div class="topnav">
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/mission">Our Mission</a>
+                <a href="/weather-stations">Climate Change based on Weather Station</a>
+                <a href="/metrics">Climate Change based on Climate Metric</a>
+                <a href="/weather-stations-similar">Similar Station Metrics</a>
+                <a href="/metrics-similar">Similar Climate Metrics</a>
+            </div>
+        </div>
+
         <h1>View Climate Metric by Station</h1>
         <form method="get">
             <label>Climate Metric:</label>
@@ -178,12 +166,10 @@ def generate_html_page(form_data, analyzer):
         <div class="results">
             {result_html}
         </div>
+
+        <div class="footer">
+            <p>Python Programming Studio Assignment - WORKING APPLICATION</p>
+        </div>
     </body>
     </html>
     """
-
-
-def get_page_html(form_data):
-    analyzer = WeatherStationAnalyzer("database/climate.db")
-    return generate_html_page(form_data, analyzer)
-
