@@ -50,7 +50,7 @@ def generate_html_page(form_data, analyzer):
     metric_options = {
         "MaxTemp": "Max Temperature",
         "MinTemp": "Min Temperature",
-        "Rainfall": "Rainfall",
+        "Precipitation": "Rainfall",
         "AverageTemp": "Average Temperature"
     }
     result_html = ""
@@ -129,7 +129,7 @@ def generate_html_page(form_data, analyzer):
             similarity_list.sort(key=lambda x: abs(x[2]))
             similarity_list = [entry for entry in similarity_list if str(entry[0]) != str(station_id)]
 
-            unit = "mm" if metric == "Rainfall" else "degrees C"
+            unit = "mm" if metric == "Precipitation" else "degrees C"
             metric_label = metric_options[metric]
 
             reference_row = f"""
@@ -240,6 +240,9 @@ def wrap_page(content, station_options, metric_options):
         </div>
         <div class="container">
             <h1>Compare Weather Station Climate Trends</h1>
+            <p>Compare climate trends between weather stations by selecting a reference station, a climate metric, and two time periods. The tool will identify and display other stations with similar percentage changes between the selected periods. You can also choose how many similar stations you'd like to see.</p>
+
+
             <form method="get">
                 <label>Reference Station:</label>
                 <select name="station">{station_options}</select><br><br>
@@ -259,6 +262,17 @@ def wrap_page(content, station_options, metric_options):
             </form>
             <div class="results">{content}</div>
         </div>
+        <footer style="background-color: #2c3e50; color: white; padding: 40px 20px 20px; text-align: center; font-size: 16px; margin-top: 80px; border-top: 3px solid #4CAF50;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 15px;">
+        <a href="/" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Home</a>
+        <a href="/mission" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Our Mission</a>
+        <a href="/weather-stations" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Weather Station Data</a>
+        <a href="/metrics" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Climate Metric Data</a>
+        <a href="/weather-stations-similar" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Similar Station Metrics</a>
+        <a href="/metrics-similar" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;">Similar Climate Metrics</a>
+    </div>
+    <p style="font-size: 14px; color: #ccc; margin-top: 10px;">© 2025 Climate Change in Australia | Data from the Australian Bureau of Meteorology</p>
+</footer>
     </body>
     </html>
     """

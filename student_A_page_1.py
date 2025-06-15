@@ -53,27 +53,27 @@ def get_page_html(form_data):
             <div class="topic-box">
                 <div style="font-size:40px;">🌧️</div>
                 <h3>Rainfall</h3>
-                <p>Track seasonal rainfall patterns and shifts over time.</p>
+                <p>TROUGHTON ISLAND recorded a staggering 367.3mm of rainfall on the 27th of January 1973</p>
             </div>
             <div class="topic-box">
                 <div style="font-size:40px;">🌡️</div>
                 <h3>Temperature</h3>
-                <p>Analyze extreme temperature changes and trends.</p>
+                <p>Broome airport's weather station has recorded an increase of average maximum temperature between the time period 2005-2009 (32 degrees) and 2010-2014 (32.7 degrees).</p>
             </div>
             <div class="topic-box">
                 <div style="font-size:40px;">💧</div>
-                <h3>Humidity</h3>
-                <p>Measure moisture levels across various regions.</p>
+                <h3>Rainfall changes</h3>
+                <p>Rainfall measured by the weatherstation at Perth airport has decreased by over 36% between 2005 to 2019.</p>
             </div>
             <div class="topic-box">
                 <div style="font-size:40px;">☀️</div>
-                <h3>Sunshine</h3>
-                <p>See how hours of sunlight have fluctuated.</p>
+                <h3>Minimum temperature changes temperature changes</h3>
+                <p>Port Headland has seen a decrease of average minimum temperature by over 2% between 2010 to 2020.</p>
             </div>
             <div class="topic-box">
                 <div style="font-size:40px;">🌫️</div>
-                <h3>Evaporation</h3>
-                <p>Observe how water evaporates from land and soil.</p>
+                <h3>Weather Stations</h3>
+                <p>There are multiple weather stations reccording comprehensive wather data in 9 states.</p>
             </div>
         </div>
 
