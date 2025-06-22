@@ -1,5 +1,51 @@
 import sqlite3
 
+class ClimateMetricAnalyzer:
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def execute_query(self, query, params=()):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            return cursor.fetchall()
+
+    def get_metrics(self):
+        return {
+            "Rainfall": "Rainfall",
+            "MaxTemp": "Maximum Temperature",
+            "MinTemp": "Minimum Temperature",
+            "SolarRadiation": "Solar Radiation",
+            "AverageTemp": "Average Temperature"
+        }
+
+    def get_daily_metric_data(self, metric, station_start, station_end, date_start, date_end):
+        value_expr = "(MaxTemp + MinTemp) / 2" if metric == "AverageTemp" else metric
+        query = f"""
+            SELECT Location, DMY, ROUND(CAST({value_expr} AS FLOAT), 2)
+            FROM weather_data
+            WHERE Location BETWEEN ? AND ?
+              AND DMY BETWEEN ? AND ?
+              AND {value_expr} IS NOT NULL
+            ORDER BY DMY ASC
+        """
+        return self.execute_query(query, (station_start, station_end, date_start, date_end))
+
+    def get_state_summary(self, metric, month, year):
+        value_expr = "(MaxTemp + MinTemp) / 2" if metric == "AverageTemp" else metric
+        query = f"""
+            SELECT s.name, ROUND(SUM(CAST({value_expr} AS FLOAT)), 2)
+            FROM weather_data w
+            JOIN weather_station ws ON w.Location = ws.site_id
+            JOIN state s ON ws.state_id = s.id
+            WHERE SUBSTR(DMY, 4, 2) = ? AND SUBSTR(DMY, 7, 4) = ?
+              AND {value_expr} IS NOT NULL
+            GROUP BY s.name
+            ORDER BY s.name
+        """
+        return self.execute_query(query, (month.zfill(2), year))
+
+
 def generate_html_page(form_data, analyzer):
     metrics = analyzer.get_metrics()
     result_html = ""
@@ -173,3 +219,8 @@ def generate_html_page(form_data, analyzer):
     </body>
     </html>
     """
+
+def get_page_html(form_data):
+    analyzer = ClimateMetricAnalyzer("database/climate.db")
+    return generate_html_page(form_data, analyzer)
+

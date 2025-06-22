@@ -83,7 +83,49 @@ def get_page_html(form_data):
         </select>
 
         <input type="submit" value="Submit">
+        
     </form>
+
+       
+        <button type="button" onclick="toggleLatTable()" style="margin-top: 20px; padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Show/Hide Latitude Ranges by State
+        </button>
+        <div id="latTable" style="display:none; margin-top: 15px;">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>State</th>
+                        <th>Min Latitude</th>
+                        <th>Max Latitude</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>New South Wales</td><td>-37.5</td><td>-28.1</td></tr>
+                    <tr><td>Victoria</td><td>-39.2</td><td>-33.9</td></tr>
+                    <tr><td>Queensland</td><td>-29.2</td><td>-10.7</td></tr>
+                    <tr><td>South Australia</td><td>-38.1</td><td>-25.0</td></tr>
+                    <tr><td>Western Australia</td><td>-35.0</td><td>-13.7</td></tr>
+                    <tr><td>Tasmania</td><td>-43.7</td><td>-39.0</td></tr>
+                    <tr><td>Northern Territory</td><td>-25.5</td><td>-10.0</td></tr>
+                    <tr><td>ACT</td><td>-35.9</td><td>-35.1</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+            function toggleLatTable() {
+                var table = document.getElementById("latTable");
+                if (table.style.display === "none") {
+                    table.style.display = "block";
+                } else {
+                    table.style.display = "none";
+                }
+            }
+        </script>
+ 
+
+
+    
     <div>
     """
 
