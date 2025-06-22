@@ -161,3 +161,6 @@ def generate_similarity_html(form_data, analyzer):
 def get_page_html(form_data):
     analyzer = ClimateMetricAnalyzer("database/climate.db")
     return generate_similarity_html(form_data, analyzer)
+
+
+
