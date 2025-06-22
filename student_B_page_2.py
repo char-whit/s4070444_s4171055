@@ -108,13 +108,10 @@ def generate_html_page(form_data, analyzer):
     <head>
         <meta charset="UTF-8">
         <title>Climate Metric Viewer</title>
+    <body>
         <link rel="stylesheet" href="B_page2.css">
         <style>
-            body {{
-                font-family: Arial, sans-serif;
-                background-color: #f9f9f9;
-                padding: 40px;
-            }}
+
             h1, h2 {{
                 color: #2c3e50;
             }}
@@ -147,22 +144,34 @@ def generate_html_page(form_data, analyzer):
                 background-color: #e0e0e0;
             }}
             .topnav {{
-                background-color: #333;
-                overflow: hidden;
-                margin-bottom: 30px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #2c3e50;
+                padding: 20px 40px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                gap: 15px;
             }}
-            .nav-links a {{
-                float: left;
-                display: block;
-                color: #f2f2f2;
-                text-align: center;
-                padding: 14px 16px;
+
+            .topnav .nav-links {{
+                display: flex;
+                gap: 15px;
+            }}
+
+            .topnav a {{
+                color: white;
                 text-decoration: none;
+                padding: 8px 14px;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+                font-size: 16px;
             }}
-            .nav-links a:hover {{
-                background-color: #ddd;
-                color: black;
+
+            .topnav a:hover {{
+                background-color: #4CAF50;
             }}
+
+
             .footer {{
                 margin-top: 40px;
                 font-size: 0.9em;
@@ -171,7 +180,6 @@ def generate_html_page(form_data, analyzer):
             }}
         </style>
     </head>
-    <body>
         <div class="topnav">
             <div class="nav-links">
                 <a href="/">Home</a>
